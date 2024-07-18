@@ -71,6 +71,31 @@ function init() {
     tg.ready();
 }
 
+function initVirtualButtons() {
+    const buttons = {
+        'upBtn': { dx: 0, dy: -1 },
+        'downBtn': { dx: 0, dy: 1 },
+        'leftBtn': { dx: -1, dy: 0 },
+        'rightBtn': { dx: 1, dy: 0 }
+    };
+
+    for (const [id, direction] of Object.entries(buttons)) {
+        const button = document.getElementById(id);
+        button.addEventListener('click', () => changeDirectionFromButton(direction.dx, direction.dy));
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            changeDirectionFromButton(direction.dx, direction.dy);
+        });
+    }
+}
+
+function changeDirectionFromButton(newDx, newDy) {
+    if (gameSettings.dx + newDx !== 0 || gameSettings.dy + newDy !== 0) {
+        gameSettings.nextDx = newDx;
+        gameSettings.nextDy = newDy;
+    }
+}
+
 function resizeCanvas() {
     const container = document.getElementById('gameContainer');
     const maxSize = Math.min(container.clientWidth, container.clientHeight) - 20; // 20px for margins

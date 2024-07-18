@@ -43,11 +43,16 @@ var COLORS = {
     text: 'white'
 };
 
+// Initialize Telegram WebApp
+const tg = window.Telegram.WebApp;
+
 function init() {
     gameSettings.canvas = document.getElementById('gameCanvas');
     gameSettings.ctx = gameSettings.canvas.getContext('2d');
-    gameSettings.canvas.width = CANVAS_WIDTH;
-    gameSettings.canvas.height = CANVAS_HEIGHT;
+    
+    // Adjust canvas size to fit Telegram Mini App
+    gameSettings.canvas.width = Math.min(CANVAS_WIDTH, tg.viewportStableHeight);
+    gameSettings.canvas.height = Math.min(CANVAS_HEIGHT, tg.viewportStableHeight);
     
     document.addEventListener('keydown', changeDirection);
     document.getElementById('newGameBtn').addEventListener('click', startNewGame);
@@ -55,6 +60,12 @@ function init() {
     loadTotalScore();
     drawStartScreen();
     initTouchEvents();
+
+    // Expand the Telegram Mini App to its maximum allowed height
+    tg.expand();
+
+    // Notify Telegram that the Mini App is ready
+    tg.ready();
 }
 
 function startNewGame() {
@@ -101,7 +112,7 @@ function drawGameElements() {
 
 function clearCanvas() {
     gameSettings.ctx.fillStyle = COLORS.background;
-    gameSettings.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    gameSettings.ctx.fillRect(0, 0, gameSettings.canvas.width, gameSettings.canvas.height);
 }
 
 function drawSnake() {
@@ -148,8 +159,8 @@ function moveSnake() {
     gameSettings.dy = gameSettings.nextDy;
 
     const head = {
-        x: (gameSettings.snake[0].x + gameSettings.dx + CANVAS_WIDTH / GRID_SIZE) % (CANVAS_WIDTH / GRID_SIZE),
-        y: (gameSettings.snake[0].y + gameSettings.dy + CANVAS_HEIGHT / GRID_SIZE) % (CANVAS_HEIGHT / GRID_SIZE)
+        x: (gameSettings.snake[0].x + gameSettings.dx + gameSettings.canvas.width / GRID_SIZE) % (gameSettings.canvas.width / GRID_SIZE),
+        y: (gameSettings.snake[0].y + gameSettings.dy + gameSettings.canvas.height / GRID_SIZE) % (gameSettings.canvas.height / GRID_SIZE)
     };
     gameSettings.snake.unshift(head);
 
@@ -211,8 +222,8 @@ function changeDirection(event) {
 function generateFood() {
     do {
         gameSettings.food = {
-            x: Math.floor(Math.random() * (CANVAS_WIDTH / GRID_SIZE)),
-            y: Math.floor(Math.random() * (CANVAS_HEIGHT / GRID_SIZE)),
+            x: Math.floor(Math.random() * (gameSettings.canvas.width / GRID_SIZE)),
+            y: Math.floor(Math.random() * (gameSettings.canvas.height / GRID_SIZE)),
             color: COLORS.food[Math.floor(Math.random() * COLORS.food.length)],
             value: Math.floor(Math.random() * 10) * 100 + 100
         };
@@ -229,8 +240,8 @@ function generateFood() {
 function generateSpecialFood() {
     do {
         gameSettings.specialFood = {
-            x: Math.floor(Math.random() * (CANVAS_WIDTH / GRID_SIZE)),
-            y: Math.floor(Math.random() * (CANVAS_HEIGHT / GRID_SIZE))
+            x: Math.floor(Math.random() * (gameSettings.canvas.width / GRID_SIZE)),
+            y: Math.floor(Math.random() * (gameSettings.canvas.height / GRID_SIZE))
         };
     } while (isFoodOnSnakeOrObstacle(gameSettings.specialFood));
 }
@@ -238,8 +249,8 @@ function generateSpecialFood() {
 function generateSlowFood() {
     do {
         gameSettings.slowFood = {
-            x: Math.floor(Math.random() * (CANVAS_WIDTH / GRID_SIZE)),
-            y: Math.floor(Math.random() * (CANVAS_HEIGHT / GRID_SIZE))
+            x: Math.floor(Math.random() * (gameSettings.canvas.width / GRID_SIZE)),
+            y: Math.floor(Math.random() * (gameSettings.canvas.height / GRID_SIZE))
         };
     } while (isFoodOnSnakeOrObstacle(gameSettings.slowFood));
 }
@@ -278,25 +289,28 @@ function gameOver() {
     const totalScoreText = `Total Score: ${gameSettings.totalScore}`;
     
     gameSettings.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    gameSettings.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    gameSettings.ctx.fillRect(0, 0, gameSettings.canvas.width, gameSettings.canvas.height);
     
     gameSettings.ctx.fillStyle = COLORS.text;
     gameSettings.ctx.font = 'bold 40px Arial';
     gameSettings.ctx.textAlign = 'center';
-    gameSettings.ctx.fillText('Game Over!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
+    gameSettings.ctx.fillText('Game Over!', gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 - 50);
     
     gameSettings.ctx.font = '30px Arial';
-    gameSettings.ctx.fillText(scoreText, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
-    gameSettings.ctx.fillText(totalScoreText, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
+    gameSettings.ctx.fillText(scoreText, gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 + 10);
+    gameSettings.ctx.fillText(totalScoreText, gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 + 50);
     
     updateTotalScoreDisplay();
+
+    // Send the score to the bot
+    tg.sendData(JSON.stringify({action: 'gameOver', score: gameSettings.score, totalScore: gameSettings.totalScore}));
 }
 
 function updateGameSpeed() {
     var newSpeedLevel = Math.floor(gameSettings.score / SPEED_INCREASE_THRESHOLD);
     if (newSpeedLevel > gameSettings.speedLevel) {
         gameSettings.speedLevel = newSpeedLevel;
-        gameSettings.gameSpeed = Math.max(MAX_SPEED, INITIAL_SPEED - (gameSettings.speedLevel * SPEED_DECREASE_AMOUNT));
+        gameSettings.gameSpeed = Math.max(MAX_SPEED, INITIAL_SPEED - (gameSettings.speedLevel *SPEED_DECREASE_AMOUNT));
         clearInterval(gameSettings.gameLoop);
         gameSettings.gameLoop = setInterval(update, gameSettings.gameSpeed);
         console.log('Speed increased. New speed: ' + gameSettings.gameSpeed);
@@ -310,8 +324,8 @@ function generateObstacles() {
         let obstacle;
         do {
             obstacle = {
-                x: Math.floor(Math.random() * (CANVAS_WIDTH / GRID_SIZE)),
-                y: Math.floor(Math.random() * (CANVAS_HEIGHT / GRID_SIZE))
+                x: Math.floor(Math.random() * (gameSettings.canvas.width / GRID_SIZE)),
+                y: Math.floor(Math.random() * (gameSettings.canvas.height / GRID_SIZE))
             };
         } while (isFoodOnSnakeOrObstacle(obstacle));
         newObstacles.push(obstacle);
@@ -406,13 +420,13 @@ function handleSwipe(startX, startY, endX, endY) {
 
 function drawStartScreen() {
     gameSettings.ctx.fillStyle = COLORS.background;
-    gameSettings.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    gameSettings.ctx.fillRect(0, 0, gameSettings.canvas.width, gameSettings.canvas.height);
     gameSettings.ctx.fillStyle = COLORS.text;
     gameSettings.ctx.font = '30px Arial';
     gameSettings.ctx.textAlign = 'center';
-    gameSettings.ctx.fillText('Snake Game', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
+    gameSettings.ctx.fillText('Snake Game', gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 - 30);
     gameSettings.ctx.font = '20px Arial';
-    gameSettings.ctx.fillText('Press "New Game" to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
+    gameSettings.ctx.fillText('Press "New Game" to start', gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 + 20);
 }
 
 function playSound(soundType) {

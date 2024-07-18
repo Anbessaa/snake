@@ -273,10 +273,14 @@ function checkCollision() {
 }
 
 function drawScore() {
-    gameSettings.ctx.fillStyle = COLORS.text;
-    gameSettings.ctx.font = '20px Arial';
-    gameSettings.ctx.textAlign = 'left';
-    gameSettings.ctx.fillText(`Score: ${gameSettings.score}`, 10, 30);
+    const totalScoreElement = document.getElementById('totalScore');
+    const currentScoreElement = document.getElementById('currentScore');
+    if (totalScoreElement) {
+        totalScoreElement.textContent = `Total Score: ${gameSettings.totalScore}`;
+    }
+    if (currentScoreElement) {
+        currentScoreElement.textContent = `Current Score: ${gameSettings.score}`;
+    }
 }
 
 function gameOver() {

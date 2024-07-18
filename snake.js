@@ -41,8 +41,9 @@ var COLORS = {
     obstacle: '#3F51B5',
     specialFood: '#FFD700',
     slowFood: '#9C27B0',
-    background: 'white',
-    text: 'black'
+    background: 'black',
+    text: 'white',
+    grid: 'rgba(255, 255, 255, 0.1)'
 };
 
 // Initialize Telegram WebApp
@@ -136,7 +137,7 @@ function clearCanvas() {
 }
 
 function drawGrid() {
-    gameSettings.ctx.strokeStyle = '#e0e0e0';
+    gameSettings.ctx.strokeStyle = COLORS.grid;
     gameSettings.ctx.lineWidth = 0.5;
 
     for (let x = 0; x <= gameSettings.width; x += GRID_SIZE) {
@@ -361,10 +362,10 @@ function gameOver() {
     const scoreText = `Score: ${gameSettings.score}`;
     const totalScoreText = `Total Score: ${gameSettings.totalScore}`;
     
-    gameSettings.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    gameSettings.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     gameSettings.ctx.fillRect(0, 0, gameSettings.canvas.width, gameSettings.canvas.height);
     
-    gameSettings.ctx.fillStyle = COLORS.text;
+    gameSettings.ctx.fillStyle = 'black';
     gameSettings.ctx.font = 'bold 40px Arial';
     gameSettings.ctx.textAlign = 'center';
     gameSettings.ctx.fillText('Game Over!', gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 - 50);

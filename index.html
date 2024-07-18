@@ -1,28 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="snake.js" defer></script>
+    <title>Змейка - Telegram Мини-игра</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #000;
+            background-color: #f0f0f0;
         }
         #gameContainer {
             text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        #gameCanvas {
-            border: 1px solid #333;
-        }
-        #totalScore {
-            color: white;
+        canvas {
+            border: 1px solid #000;
             margin-top: 10px;
         }
         #newGameBtn {
@@ -32,15 +32,27 @@
             background-color: #4CAF50;
             color: white;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
+        }
+        #newGameBtn:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
-        <div id="totalScore"></div>
-        <button id="newGameBtn">New Game</button>
-    </div>
+    <main id="gameContainer">
+        <header>
+            <h1>Змейка</h1>
+        </header>
+        <section aria-live="polite">
+            <p id="totalScore">Общий счет: <span>0</span></p>
+            <p id="currentScore">Текущий счет: <span>0</span></p>
+        </section>
+        <canvas id="gameCanvas" aria-label="Игровое поле змейки"></canvas>
+        <button id="newGameBtn" aria-label="Начать новую игру">Новая игра</button>
+    </main>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="snake.js"></script>
 </body>
 </html>

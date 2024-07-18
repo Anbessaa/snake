@@ -6,6 +6,7 @@ const MAX_SPEED = 50;
 const SPEED_DECREASE_AMOUNT = 2;
 const BONUS_DURATION = 5000;
 const SLOW_DURATION = 5000;
+const OBSTACLE_COUNT = 5;
 
 // Game settings
 var gameSettings = {
@@ -34,13 +35,14 @@ var gameSettings = {
 
 // Colors
 var COLORS = {
-    snake: ['#4CAF50', '#8BC34A', '#CDDC39'],
-    food: ['#FF5722', '#FFC107', '#FF9800'],
+    snake: '#4CAF50',
+    snakeHead: '#45a049',
+    food: '#FF5722',
     obstacle: '#3F51B5',
     specialFood: '#FFD700',
     slowFood: '#9C27B0',
-    background: 'black',
-    text: 'white'
+    background: 'white',
+    text: 'black'
 };
 
 // Initialize Telegram WebApp
@@ -70,10 +72,10 @@ function init() {
 
 function resizeCanvas() {
     const container = document.getElementById('gameContainer');
-    const size = Math.min(container.clientWidth, container.clientHeight) - 20; // 20px for margins
+    const maxSize = Math.min(container.clientWidth, container.clientHeight) - 20; // 20px for margins
 
-    gameSettings.width = Math.floor(size / GRID_SIZE) * GRID_SIZE;
-    gameSettings.height = Math.floor(size / GRID_SIZE) * GRID_SIZE;
+    gameSettings.width = Math.floor(maxSize / GRID_SIZE) * GRID_SIZE;
+    gameSettings.height = Math.floor(maxSize / GRID_SIZE) * GRID_SIZE;
 
     gameSettings.canvas.width = gameSettings.width;
     gameSettings.canvas.height = gameSettings.height;
@@ -115,11 +117,12 @@ function update() {
     moveSnake();
     drawGameElements();
     checkCollision();
-    drawScore();
+    updateScore();
     updateGameSpeed();
 }
 
 function drawGameElements() {
+    drawGrid();
     drawObstacles();
     drawSnake();
     drawFood();
@@ -132,11 +135,70 @@ function clearCanvas() {
     gameSettings.ctx.fillRect(0, 0, gameSettings.canvas.width, gameSettings.canvas.height);
 }
 
+function drawGrid() {
+    gameSettings.ctx.strokeStyle = '#e0e0e0';
+    gameSettings.ctx.lineWidth = 0.5;
+
+    for (let x = 0; x <= gameSettings.width; x += GRID_SIZE) {
+        gameSettings.ctx.beginPath();
+        gameSettings.ctx.moveTo(x, 0);
+        gameSettings.ctx.lineTo(x, gameSettings.height);
+        gameSettings.ctx.stroke();
+    }
+
+    for (let y = 0; y <= gameSettings.height; y += GRID_SIZE) {
+        gameSettings.ctx.beginPath();
+        gameSettings.ctx.moveTo(0, y);
+        gameSettings.ctx.lineTo(gameSettings.width, y);
+        gameSettings.ctx.stroke();
+    }
+}
+
 function drawSnake() {
     gameSettings.snake.forEach((segment, index) => {
-        gameSettings.ctx.fillStyle = COLORS.snake[index % COLORS.snake.length];
-        gameSettings.ctx.fillRect(segment.x * GRID_SIZE, segment.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+        if (index === 0) {
+            drawSnakeHead(segment);
+        } else {
+            drawSnakeSegment(segment);
+        }
     });
+}
+
+function drawSnakeHead(segment) {
+    const x = segment.x * GRID_SIZE + GRID_SIZE / 2;
+    const y = segment.y * GRID_SIZE + GRID_SIZE / 2;
+    const radius = GRID_SIZE / 2;
+
+    gameSettings.ctx.fillStyle = COLORS.snakeHead;
+    gameSettings.ctx.beginPath();
+    gameSettings.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    gameSettings.ctx.fill();
+
+    // Draw eyes
+    const eyeRadius = GRID_SIZE / 10;
+    const eyeOffset = GRID_SIZE / 4;
+    gameSettings.ctx.fillStyle = 'white';
+    gameSettings.ctx.beginPath();
+    gameSettings.ctx.arc(x - eyeOffset, y - eyeOffset, eyeRadius, 0, Math.PI * 2);
+    gameSettings.ctx.arc(x + eyeOffset, y - eyeOffset, eyeRadius, 0, Math.PI * 2);
+    gameSettings.ctx.fill();
+
+    gameSettings.ctx.fillStyle = 'black';
+    gameSettings.ctx.beginPath();
+    gameSettings.ctx.arc(x - eyeOffset, y - eyeOffset, eyeRadius / 2, 0, Math.PI * 2);
+    gameSettings.ctx.arc(x + eyeOffset, y - eyeOffset, eyeRadius / 2, 0, Math.PI * 2);
+    gameSettings.ctx.fill();
+}
+
+function drawSnakeSegment(segment) {
+    const x = segment.x * GRID_SIZE + GRID_SIZE / 2;
+    const y = segment.y * GRID_SIZE + GRID_SIZE / 2;
+    const radius = GRID_SIZE / 2 - 1;
+
+    gameSettings.ctx.fillStyle = COLORS.snake;
+    gameSettings.ctx.beginPath();
+    gameSettings.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    gameSettings.ctx.fill();
 }
 
 function drawFood() {
@@ -152,8 +214,14 @@ function drawSlowFood() {
 }
 
 function drawFoodItem(foodItem, isSpecial = false, isSlow = false) {
-    gameSettings.ctx.fillStyle = isSpecial ? COLORS.specialFood : (isSlow ? COLORS.slowFood : foodItem.color);
-    gameSettings.ctx.fillRect(foodItem.x * GRID_SIZE, foodItem.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+    const x = foodItem.x * GRID_SIZE + GRID_SIZE / 2;
+    const y = foodItem.y * GRID_SIZE + GRID_SIZE / 2;
+    const radius = GRID_SIZE / 2 - 2;
+
+    gameSettings.ctx.fillStyle = isSpecial ? COLORS.specialFood : (isSlow ? COLORS.slowFood : COLORS.food);
+    gameSettings.ctx.beginPath();
+    gameSettings.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    gameSettings.ctx.fill();
 }
 
 function moveSnake() {
@@ -226,7 +294,6 @@ function generateFood() {
         gameSettings.food = {
             x: Math.floor(Math.random() * (gameSettings.width / GRID_SIZE)),
             y: Math.floor(Math.random() * (gameSettings.height / GRID_SIZE)),
-            color: COLORS.food[Math.floor(Math.random() * COLORS.food.length)],
             value: Math.floor(Math.random() * 10) * 100 + 100
         };
     } while (isFoodOnSnakeOrObstacle(gameSettings.food));
@@ -272,7 +339,7 @@ function checkCollision() {
     }
 }
 
-function drawScore() {
+function updateScore() {
     const totalScoreElement = document.getElementById('totalScore');
     const currentScoreElement = document.getElementById('currentScore');
     if (totalScoreElement) {
@@ -306,7 +373,7 @@ function gameOver() {
     gameSettings.ctx.fillText(scoreText, gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 + 10);
     gameSettings.ctx.fillText(totalScoreText, gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 + 50);
     
-    updateTotalScoreDisplay();
+    updateScore();
 
     // Send the score to the bot
     tg.sendData(JSON.stringify({action: 'gameOver', score: gameSettings.score, totalScore: gameSettings.totalScore}));
@@ -324,19 +391,24 @@ function updateGameSpeed() {
 }
 
 function generateObstacles() {
-    const obstacleCount = Math.floor((gameSettings.width * gameSettings.height) / (GRID_SIZE * GRID_SIZE) / 20); // примерно 5% от площади
     const newObstacles = [];
-    for (let i = 0; i < obstacleCount; i++) {
+    for (let i = 0; i < OBSTACLE_COUNT; i++) {
         let obstacle;
         do {
             obstacle = {
                 x: Math.floor(Math.random() * (gameSettings.width / GRID_SIZE)),
                 y: Math.floor(Math.random() * (gameSettings.height / GRID_SIZE))
             };
-        } while (isFoodOnSnakeOrObstacle(obstacle));
+        } while (isFoodOnSnakeOrObstacle(obstacle) || isObstacleNearSnake(obstacle));
         newObstacles.push(obstacle);
     }
     return newObstacles;
+}
+
+function isObstacleNearSnake(obstacle) {
+    const head = gameSettings.snake[0];
+    const distance = Math.abs(obstacle.x - head.x) + Math.abs(obstacle.y - head.y);
+    return distance < 3; // Минимальное расстояние от головы змеи до препятствия
 }
 
 function drawObstacles() {
@@ -372,18 +444,7 @@ function loadTotalScore() {
     if (savedScore) {
         gameSettings.totalScore = parseInt(savedScore, 10);
     }
-    updateTotalScoreDisplay();
-}
-
-function updateTotalScoreDisplay() {
-    const totalScoreElement = document.getElementById('totalScore');
-    const currentScoreElement = document.getElementById('currentScore');
-    if (totalScoreElement) {
-        totalScoreElement.textContent = `Total Score: ${gameSettings.totalScore}`;
-    }
-    if (currentScoreElement) {
-        currentScoreElement.textContent = `Current Score: ${gameSettings.score}`;
-    }
+    updateScore();
 }
 
 function initTouchEvents() {

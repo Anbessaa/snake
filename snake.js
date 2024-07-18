@@ -362,21 +362,25 @@ function gameOver() {
     const scoreText = `Score: ${gameSettings.score}`;
     const totalScoreText = `Total Score: ${gameSettings.totalScore}`;
     
-    gameSettings.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    gameSettings.ctx.fillRect(0, 0, gameSettings.canvas.width, gameSettings.canvas.height);
+    // Очищаем канвас
+    gameSettings.ctx.clearRect(0, 0, gameSettings.canvas.width, gameSettings.canvas.height);
     
-    gameSettings.ctx.fillStyle = 'black';
-    gameSettings.ctx.font = 'bold 40px Arial';
+    // Устанавливаем белый цвет для текста
+    gameSettings.ctx.fillStyle = 'white';
     gameSettings.ctx.textAlign = 'center';
+    
+    // Рисуем "Game Over!"
+    gameSettings.ctx.font = 'bold 40px Arial';
     gameSettings.ctx.fillText('Game Over!', gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 - 50);
     
+    // Рисуем счет и общий счет
     gameSettings.ctx.font = '30px Arial';
     gameSettings.ctx.fillText(scoreText, gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 + 10);
     gameSettings.ctx.fillText(totalScoreText, gameSettings.canvas.width / 2, gameSettings.canvas.height / 2 + 50);
     
     updateScore();
 
-    // Send the score to the bot
+    // Отправляем счет боту
     tg.sendData(JSON.stringify({action: 'gameOver', score: gameSettings.score, totalScore: gameSettings.totalScore}));
 }
 

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        #gameCanvas {
+            border: 1px solid #000;
+        }
+        #scoreContainer {
+            margin-top: 10px;
+        }
+        #customizationContainer {
+            margin-top: 10px;
+        }
+        #leaderboardContainer {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="scoreContainer">
+            <div id="totalScore">Total Score: 0</div>
+            <div id="currentScore">Current Score: 0</div>
+            <div id="levelDisplay">Level: 1</div>
+        </div>
+        <button id="newGameBtn">New Game</button>
+        <div id="customizationContainer">
+            <label for="snakeColor">Snake Color:</label>
+            <input type="color" id="snakeColor" value="#4CAF50">
+            <label for="bgColor">Background Color:</label>
+            <input type="color" id="bgColor" value="#000000">
+        </div>
+        <div id="leaderboardContainer"></div>
+    </div>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script type="module" src="game.js"></script>
+    <script type="module" src="utils.js"></script>
+</body>
+</html>
